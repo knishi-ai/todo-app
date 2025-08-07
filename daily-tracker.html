@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tracker - 日報・ToDo・習慣管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .date-display {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+
+        .todo-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .record-icon {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .habit-icon {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .todo-item, .record-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item:hover, .record-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .todo-checkbox {
+            width: 22px;
+            height: 22px;
+            margin-right: 15px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .todo-text {
+            flex: 1;
+            color: #374151;
+            font-size: 1rem;
+        }
+
+        .todo-text.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .textarea-field {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .textarea-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .habit-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .habit-table th, .habit-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .habit-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .habit-table td {
+            background: white;
+        }
+
+        .habit-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+
+        .habit-input {
+            width: 100%;
+            border: none;
+            padding: 8px;
+            font-size: 0.95rem;
+            background: transparent;
+            text-align: left;
+        }
+
+        .habit-input:focus {
+            outline: none;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .add-habit-btn {
+            width: 100%;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .record-time {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-right: 10px;
+        }
+
+        .record-text {
+            flex: 1;
+            color: #374151;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Daily Tracker</h1>
+            <div class="date-display" id="currentDate"></div>
+        </div>
+
+        <div class="main-grid">
+            <!-- ToDo Section -->
+            <div class="card fade-in">
+                <div class="card-header">
+                    <div class="card-icon todo-icon">✅</div>
+                    <h2 class="card-title">今日のToDo</h2>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="input-field" id="todoInput" placeholder="新しいタスクを入力...">
+                    <button class="btn btn-primary" onclick="addTodo()">追加</button>
+                </div>
+                <div id="todoList"></div>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-value" id="todoCompleted">0</div>
+                        <div class="stat-label">完了</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="todoRemaining">0</div>
+                        <div class="stat-label">残り</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Record Section -->
+            <div class="card fade-in">
+                <div class="card-header">
+                    <div class="card-icon record-icon">📝</div>
+                    <h2 class="card-title">今日の記録</h2>
+                </div>
+                <textarea class="textarea-field" id="recordInput" placeholder="今日の出来事、気づき、感想を記録..."></textarea>
+                <button class="btn btn-primary" onclick="addRecord()" style="width: 100%; margin-top: 15px;">記録を追加</button>
+                <div id="recordList" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Habit Tracker Section -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="card-icon habit-icon">📈</div>
+                <h2 class="card-title">週間習慣トラッカー</h2>
+            </div>
+            <table class="habit-table" id="habitTable">
+                <thead>
+                    <tr>
+                        <th>習慣</th>
+                        <th>月</th>
+                        <th>火</th>
+                        <th>水</th>
+                        <th>木</th>
+                        <th>金</th>
+                        <th>土</th>
+                        <th>日</th>
+                        <th>達成率</th>
+                    </tr>
+                </thead>
+                <tbody id="habitTableBody"></tbody>
+            </table>
+            <button class="btn btn-primary add-habit-btn" onclick="addHabit()">習慣を追加</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize app
+        let todos = [];
+        let records = [];
+        let habits = [];
+
+        // Load data from localStorage
+        function loadData() {
+            const savedTodos = localStorage.getItem('todos');
+            const savedRecords = localStorage.getItem('records');
+            const savedHabits = localStorage.getItem('habits');
+            
+            if (savedTodos) todos = JSON.parse(savedTodos);
+            if (savedRecords) records = JSON.parse(savedRecords);
+            if (savedHabits) habits = JSON.parse(savedHabits);
+            
+            // Clean old data (keep only last 7 days)
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            
+            records = records.filter(record => new Date(record.date) > sevenDaysAgo);
+            todos = todos.filter(todo => new Date(todo.date) > sevenDaysAgo);
+            
+            saveData();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+            localStorage.setItem('records', JSON.stringify(records));
+            localStorage.setItem('habits', JSON.stringify(habits));
+        }
+
+        // Display current date
+        function displayDate() {
+            const date = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+            };
+            document.getElementById('currentDate').textContent = 
+                date.toLocaleDateString('ja-JP', options);
+        }
+
+        // Get today's date string
+        function getTodayString() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // Get current week dates
+        function getCurrentWeekDates() {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const diff = currentDay === 0 ? -6 : 1 - currentDay;
+            const monday = new Date(today);
+            monday.setDate(today.getDate() + diff);
+            
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                weekDates.push(date.toISOString().split('T')[0]);
+            }
+            return weekDates;
+        }
+
+        // ToDo functions
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                const todo = {
+                    id: Date.now(),
+                    text: text,
+                    completed: false,
+                    date: getTodayString()
+                };
+                todos.push(todo);
+                input.value = '';
+                saveData();
+                renderTodos();
+            }
+        }
+
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveData();
+                renderTodos();
+            }
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(t => t.id !== id);
+            saveData();
+            renderTodos();
+        }
+
+        function renderTodos() {
+            const today = getTodayString();
+            const todayTodos = todos.filter(t => t.date === today);
+            const todoList = document.getElementById('todoList');
+            
+            todoList.innerHTML = todayTodos.map(todo => `
+                <div class="todo-item">
+                    <input type="checkbox" class="todo-checkbox" 
+                           ${todo.completed ? 'checked' : ''} 
+                           onchange="toggleTodo(${todo.id})">
+                    <span class="todo-text ${todo.completed ? 'completed' : ''}">
+                        ${todo.text}
+                    </span>
+                    <button class="delete-btn" onclick="deleteTodo(${todo.id})">削除</button>
+                </div>
+            `).join('');
+            
+            // Update stats
+            const completed = todayTodos.filter(t => t.completed).length;
+            const remaining = todayTodos.filter(t => !t.completed).length;
+            document.getElementById('todoCompleted').textContent = completed;
+            document.getElementById('todoRemaining').textContent = remaining;
+        }
+
+        // Record functions
+        function addRecord() {
+            const input = document.getElementById('recordInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                const record = {
+                    id: Date.now(),
+                    text: text,
+                    date: getTodayString(),
+                    time: new Date().toLocaleTimeString('ja-JP', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    })
+                };
+                records.unshift(record);
+                input.value = '';
+                saveData();
+                renderRecords();
+            }
+        }
+
+        function deleteRecord(id) {
+            records = records.filter(r => r.id !== id);
+            saveData();
+            renderRecords();
+        }
+
+        function renderRecords() {
+            const today = getTodayString();
+            const todayRecords = records.filter(r => r.date === today);
+            const recordList = document.getElementById('recordList');
+            
+            recordList.innerHTML = todayRecords.map(record => `
+                <div class="record-item">
+                    <span class="record-time">${record.time}</span>
+                    <span class="record-text">${record.text}</span>
+                    <button class="delete-btn" onclick="deleteRecord(${record.id})">削除</button>
+                </div>
+            `).join('');
+        }
+
+        // Habit functions
+        function addHabit() {
+            const habitName = prompt('新しい習慣の名前を入力してください:');
+            if (habitName && habitName.trim()) {
+                const habit = {
+                    id: Date.now(),
+                    name: habitName.trim(),
+                    checks: {}
+                };
+                habits.push(habit);
+                saveData();
+                renderHabits();
+            }
+        }
+
+        function updateHabitName(id, name) {
+            const habit = habits.find(h => h.id === id);
+            if (habit) {
+                habit.name = name;
+                saveData();
+            }
+        }
+
+        function toggleHabit(habitId, date) {
+            const habit = habits.find(h => h.id === habitId);
+            if (habit) {
+                if (!habit.checks) habit.checks = {};
+                habit.checks[date] = !habit.checks[date];
+                saveData();
+                renderHabits();
+            }
+        }
+
+        function deleteHabit(id) {
+            if (confirm('この習慣を削除しますか？')) {
+                habits = habits.filter(h => h.id !== id);
+                saveData();
+                renderHabits();
+            }
+        }
+
+        function renderHabits() {
+            const weekDates = getCurrentWeekDates();
+            const tbody = document.getElementById('habitTableBody');
+            
+            tbody.innerHTML = habits.map(habit => {
+                const checkedCount = weekDates.filter(date => habit.checks && habit.checks[date]).length;
+                const percentage = Math.round((checkedCount / 7) * 100);
+                
+                return `
+                    <tr>
+                        <td>
+                            <input type="text" class="habit-input" value="${habit.name}" 
+                                   onchange="updateHabitName(${habit.id}, this.value)">
+                            <button class="delete-btn" onclick="deleteHabit(${habit.id})" 
+                                    style="margin-top: 5px;">削除</button>
+                        </td>
+                        ${weekDates.map(date => `
+                            <td>
+                                <input type="checkbox" class="habit-checkbox"
+                                       ${habit.checks && habit.checks[date] ? 'checked' : ''}
+                                       onchange="toggleHabit(${habit.id}, '${date}')">
+                            </td>
+                        `).join('')}
+                        <td style="font-weight: 600; color: ${percentage >= 70 ? '#10b981' : '#6b7280'};">
+                            ${percentage}%
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Event listeners
+        document.getElementById('todoInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addTodo();
+        });
+
+        document.getElementById('recordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) addRecord();
+        });
+
+        // Initialize app on load
+        window.onload = function() {
+            displayDate();
+            loadData();
+            renderTodos();
+            renderRecords();
+            renderHabits();
+            
+            // Auto-save every 30 seconds
+            setInterval(saveData, 30000);
+        };
+    </script>
+</body>
+</html>
