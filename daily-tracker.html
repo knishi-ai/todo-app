@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tracker - 日報・ToDo・習慣管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--gray-800);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .date-display {
+            font-size: 18px;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .todo-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--gray-50);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .todo-item:hover {
+            background: var(--gray-100);
+            transform: translateX(4px);
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .todo-text {
+            flex: 1;
+            font-size: 15px;
+        }
+
+        .todo-text.completed {
+            text-decoration: line-through;
+            color: var(--gray-400);
+        }
+
+        .todo-time {
+            font-size: 12px;
+            color: var(--gray-500);
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .report-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 14px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 15px;
+            resize: vertical;
+            transition: all 0.3s;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        .report-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .report-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .meta-tag {
+            padding: 6px 12px;
+            background: var(--gray-100);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        .habit-grid {
+            display: grid;
+            grid-template-columns: 120px repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .habit-header {
+            font-weight: 600;
+            text-align: center;
+            padding: 8px;
+            background: var(--gray-100);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .habit-name {
+            padding: 8px;
+            background: var(--gray-50);
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .habit-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            background: var(--gray-50);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .habit-cell:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .habit-cell.completed {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .habit-cell.completed::after {
+            content: '✓';
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .habit-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .add-habit-btn {
+            background: var(--secondary);
+        }
+
+        .add-habit-btn:hover {
+            background: #7c3aed;
+        }
+
+        .delete-habit {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            padding: 2px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .delete-habit:hover {
+            transform: scale(1.2);
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 2px solid var(--gray-100);
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: var(--gray-400);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .todo-item, .habit-cell {
+            animation: slideIn 0.3s ease;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Daily Tracker</h1>
+            <div class="date-display" id="dateDisplay"></div>
+        </div>
+
+        <div class="main-grid">
+            <!-- 今日のToDo -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span>✅</span>
+                        今日のToDo
+                    </h2>
+                    <span id="todoCount" class="meta-tag">0 件</span>
+                </div>
+                
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="todoInput" 
+                        class="input-field" 
+                        placeholder="新しいタスクを入力..."
+                    >
+                    <button class="btn btn-primary" onclick="addTodo()">
+                        追加
+                    </button>
+                </div>
+
+                <div id="todoList" class="todo-list"></div>
+                
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-value" id="completedCount">0</div>
+                        <div class="stat-label">完了</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="remainingCount">0</div>
+                        <div class="stat-label">残り</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="completionRate">0%</div>
+                        <div class="stat-label">達成率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 今日の記録 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span>📝</span>
+                        今日の記録
+                    </h2>
+                    <span id="lastSaved" class="meta-tag">未保存</span>
+                </div>
+                
+                <textarea 
+                    id="reportTextarea" 
+                    class="report-textarea" 
+                    placeholder="今日の活動、成果、気づきなどを記録..."
+                ></textarea>
+                
+                <div class="report-meta">
+                    <span class="meta-tag" id="charCount">0 文字</span>
+                    <span class="meta-tag" id="wordCount">0 単語</span>
+                </div>
+                
+                <button class="btn btn-success" onclick="saveReport()" style="margin-top: 12px; width: 100%;">
+                    保存
+                </button>
+            </div>
+        </div>
+
+        <!-- 週間習慣表 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>📅</span>
+                    週間習慣トラッカー
+                </h2>
+                <span id="weekRange" class="meta-tag"></span>
+            </div>
+            
+            <div class="habit-input-group">
+                <input 
+                    type="text" 
+                    id="habitInput" 
+                    class="input-field" 
+                    placeholder="新しい習慣を入力（例：運動、読書、瞑想）"
+                >
+                <button class="btn add-habit-btn" onclick="addHabit()">
+                    習慣を追加
+                </button>
+            </div>
+            
+            <div id="habitGrid" class="habit-grid"></div>
+            
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value" id="weeklyStreak">0</div>
+                    <div class="stat-label">今週の連続達成</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="weeklyCompletion">0%</div>
+                    <div class="stat-label">週間達成率</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalHabits">0</div>
+                    <div class="stat-label">登録習慣数</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 日付関連のユーティリティ
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            return date.toLocaleDateString('ja-JP', options);
+        }
+        
+        function getWeekDates() {
+            const dates = [];
+            const startOfWeek = new Date(today);
+            const day = startOfWeek.getDay();
+            const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+            startOfWeek.setDate(diff);
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                dates.push(date);
+            }
+            return dates;
+        }
+        
+        const weekDates = getWeekDates();
+        const weekDays = ['月', '火', '水', '木', '金', '土', '日'];
+        
+        // データ構造
+        let todos = JSON.parse(localStorage.getItem(`todos_${todayStr}`)) || [];
+        let report = JSON.parse(localStorage.getItem(`report_${todayStr}`)) || { text: '', savedAt: null };
+        let habits = JSON.parse(localStorage.getItem('habits')) || [];
+        let habitData = JSON.parse(localStorage.getItem('habitData')) || {};
+        
+        // 初期化
+        document.getElementById('dateDisplay').textContent = formatDate(today);
+        document.getElementById('weekRange').textContent = 
+            `${weekDates[0].getMonth() + 1}/${weekDates[0].getDate()} - ${weekDates[6].getMonth() + 1}/${weekDates[6].getDate()}`;
+        
+        // ToDo機能
+        function saveTodos() {
+            localStorage.setItem(`todos_${todayStr}`, JSON.stringify(todos));
+            updateTodoStats();
+        }
+        
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const text = input.value.trim();
+            
+            if (text === '') return;
+            
+            todos.push({
+                id: Date.now(),
+                text: text,
+                completed: false,
+                createdAt: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+            });
+            
+            input.value = '';
+            saveTodos();
+            renderTodos();
+        }
+        
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveTodos();
+                renderTodos();
+            }
+        }
+        
+        function deleteTodo(id) {
+            todos = todos.filter(t => t.id !== id);
+            saveTodos();
+            renderTodos();
+        }
+        
+        function renderTodos() {
+            const list = document.getElementById('todoList');
+            
+            if (todos.length === 0) {
+                list.innerHTML = '<div class="empty-state">タスクがありません</div>';
+                return;
+            }
+            
+            list.innerHTML = todos.map(todo => `
+                <div class="todo-item">
+                    <input 
+                        type="checkbox" 
+                        class="todo-checkbox" 
+                        ${todo.completed ? 'checked' : ''}
+                        onchange="toggleTodo(${todo.id})"
+                    >
+                    <span class="todo-text ${todo.completed ? 'completed' : ''}">
+                        ${todo.text}
+                    </span>
+                    <span class="todo-time">${todo.createdAt}</span>
+                    <button class="btn btn-danger" onclick="deleteTodo(${todo.id})">
+                        削除
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        function updateTodoStats() {
+            const completed = todos.filter(t => t.completed).length;
+            const remaining = todos.length - completed;
+            const rate = todos.length > 0 ? Math.round((completed / todos.length) * 100) : 0;
+            
+            document.getElementById('todoCount').textContent = `${todos.length} 件`;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('remainingCount').textContent = remaining;
+            document.getElementById('completionRate').textContent = `${rate}%`;
+        }
+        
+        // 日報機能
+        function saveReport() {
+            const textarea = document.getElementById('reportTextarea');
+            report = {
+                text: textarea.value,
+                savedAt: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+            };
+            
+            localStorage.setItem(`report_${todayStr}`, JSON.stringify(report));
+            document.getElementById('lastSaved').textContent = `保存済み ${report.savedAt}`;
+            
+            // 保存時のアニメーション
+            const btn = event.target;
+            btn.textContent = '✓ 保存しました';
+            setTimeout(() => {
+                btn.textContent = '保存';
+            }, 2000);
+        }
+        
+        function updateReportStats() {
+            const text = document.getElementById('reportTextarea').value;
+            const charCount = text.length;
+            const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+            
+            document.getElementById('charCount').textContent = `${charCount} 文字`;
+            document.getElementById('wordCount').textContent = `${wordCount} 単語`;
+        }
+        
+        // 習慣トラッカー機能
+        function saveHabits() {
+            localStorage.setItem('habits', JSON.stringify(habits));
+            localStorage.setItem('habitData', JSON.stringify(habitData));
+            updateHabitStats();
+        }
+        
+        function addHabit() {
+            const input = document.getElementById('habitInput');
+            const name = input.value.trim();
+            
+            if (name === '' || habits.includes(name)) return;
+            
+            habits.push(name);
+            input.value = '';
+            saveHabits();
+            renderHabitGrid();
+        }
+        
+        function deleteHabit(habit) {
+            habits = habits.filter(h => h !== habit);
+            
+            // 関連データも削除
+            for (let key in habitData) {
+                if (key.startsWith(habit + '_')) {
+                    delete habitData[key];
+                }
+            }
+            
+            saveHabits();
+            renderHabitGrid();
+        }
+        
+        function toggleHabit(habit, dateStr) {
+            const key = `${habit}_${dateStr}`;
+            habitData[key] = !habitData[key];
+            saveHabits();
+            renderHabitGrid();
+        }
+        
+        function renderHabitGrid() {
+            const grid = document.getElementById('habitGrid');
+            
+            if (habits.length === 0) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">習慣を追加してください</div>';
+                return;
+            }
+            
+            let html = '<div class="habit-header">習慣</div>';
+            
+            // 曜日ヘッダー
+            weekDates.forEach((date, i) => {
+                const isToday = date.toDateString() === today.toDateString();
+                html += `
+                    <div class="habit-header" style="${isToday ? 'background: var(--primary); color: white;' : ''}">
+                        ${weekDays[i]}<br>
+                        <small>${date.getDate()}</small>
+                    </div>
+                `;
+            });
+            
+            // 習慣の行
+            habits.forEach(habit => {
+                html += `
+                    <div class="habit-name">
+                        ${habit}
+                        <button class="delete-habit" onclick="deleteHabit('${habit}')">×</button>
+                    </div>
+                `;
+                
+                weekDates.forEach(date => {
+                    const dateStr = date.toISOString().split('T')[0];
+                    const key = `${habit}_${dateStr}`;
+                    const completed = habitData[key] || false;
+                    const isToday = date.toDateString() === today.toDateString();
+                    const isFuture = date > today;
+                    
+                    html += `
+                        <div 
+                            class="habit-cell ${completed ? 'completed' : ''}"
+                            style="${isToday ? 'border: 2px solid var(--primary);' : ''} ${isFuture ? 'opacity: 0.3; cursor: not-allowed;' : ''}"
+                            onclick="${!isFuture ? `toggleHabit('${habit}', '${dateStr}')` : ''}"
+                        ></div>
+                    `;
+                });
+            });
+            
+            grid.innerHTML = html;
+        }
+        
+        function updateHabitStats() {
+            let weeklyCompleted = 0;
+            let totalPossible = 0;
+            let currentStreak = 0;
+            let tempStreak = 0;
+            
+            habits.forEach(habit => {
+                let habitStreak = 0;
+                weekDates.forEach(date => {
+                    if (date <= today) {
+                        const dateStr = date.toISOString().split('T')[0];
+                        const key = `${habit}_${dateStr}`;
+                        totalPossible++;
+                        
+                        if (habitData[key]) {
+                            weeklyCompleted++;
+                            habitStreak++;
+                        } else {
+                            habitStreak = 0;
+                        }
+                    }
+                });
+                currentStreak = Math.max(currentStreak, habitStreak);
+            });
+            
+            const completionRate = totalPossible > 0 ? Math.round((weeklyCompleted / totalPossible) * 100) : 0;
+            
+            document.getElementById('weeklyStreak').textContent = currentStreak;
+            document.getElementById('weeklyCompletion').textContent = `${completionRate}%`;
+            document.getElementById('totalHabits').textContent = habits.length;
+        }
+        
+        // イベントリスナー
+        document.getElementById('todoInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTodo();
+        });
+        
+        document.getElementById('habitInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addHabit();
+        });
+        
+        document.getElementById('reportTextarea').addEventListener('input', updateReportStats);
+        
+        // 初期レンダリング
+        function init() {
+            // ToDo
+            renderTodos();
+            updateTodoStats();
+            
+            // 日報
+            const textarea = document.getElementById('reportTextarea');
+            textarea.value = report.text || '';
+            if (report.savedAt) {
+                document.getElementById('lastSaved').textContent = `保存済み ${report.savedAt}`;
+            }
+            updateReportStats();
+            
+            // 習慣トラッカー
+            renderHabitGrid();
+            updateHabitStats();
+        }
+        
+        init();
+        
+        // 自動保存（日報）
+        let saveTimeout;
+        document.getElementById('reportTextarea').addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            document.getElementById('lastSaved').textContent = '編集中...';
+            saveTimeout = setTimeout(() => {
+                saveReport();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
